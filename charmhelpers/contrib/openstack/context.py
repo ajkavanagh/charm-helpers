@@ -804,10 +804,12 @@ class HAProxyContext(OSContextGenerator):
 
         l_unit = local_unit().replace('/', '-')
         cluster_hosts = collections.OrderedDict()
-        enable_lb = True
-        for rid in relation_ids('ha'):
-            for unit in related_units(rid):
-                enable_lb = relation_get('enable_lb', rid=rid, unit=unit)
+        try:
+            rid = relation_ids('ha')[0]
+            unit = related_units(rid)[0]
+            enable_lb = relation_get('enable_lb', rid=rid, unit=unit)
+        except IndexError:
+            enable_lb = True
 
         # NOTE(jamespage): build out map of configured network endpoints
         # and associated backends
@@ -866,7 +868,7 @@ class HAProxyContext(OSContextGenerator):
         for rid in relation_ids('cluster'):
             # API Charms will need to set their private-address with
             # get_relation_ip('cluster')
-            if enable_lb is True:
+            if enable_lb:
                 for unit in sorted(related_units(rid)):
                     _laddr = relation_get('private-address',
                                           rid=rid, unit=unit)
